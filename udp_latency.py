@@ -141,10 +141,11 @@ class Server:
             print("|  ---------- Sychonizing Server & Client by PTP ------------  |")
 
         for i in range(10):
-            msg, _ = self._udp_socket.recvfrom(128 + HEADER_SIZE)
+            msg, remoteAddr = self._udp_socket.recvfrom(128 + HEADER_SIZE)
             t1 = int.from_bytes(msg[4:12], "big")
             t1_p = time.time_ns()
             time.sleep(0.05)
+            self.remote_ip,self.to_port = remoteAddr
 
             t2 = time.time_ns()
             index_bytes = (0).to_bytes(4, "big")
