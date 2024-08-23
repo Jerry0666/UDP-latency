@@ -194,6 +194,10 @@ class Server:
                 print("Receive message at time %d" % recv_time)
 
     def send(self, packet_size, verbose, q):
+        print("remote ip: %s" %self.remote_ip)
+        print("remote port: %s" %self.to_port)
+        print("local ip: %s" %self.local_ip)
+        print("local port: %s" %self.local_port)
         if packet_size < HEADER_SIZE or packet_size > 1500:
             raise "Warning: packet size is not allowed larger than 1500 bytes (MTU size)"
 
@@ -214,6 +218,11 @@ class Server:
             if verbose:
                 print("Send message at time %d" % current_time)
 
+    def setRemoteIP(self):
+        print("RTT server set remote IP.")
+        _,remoteAddr =  self._udp_socket.recvfrom(10)
+        self.remote_ip,self.to_port = remoteAddr
+
     def __del__(self):
         self._udp_socket.close()
 
@@ -223,7 +232,7 @@ if __name__ == "__main__":
         _opts, _ = getopt.getopt(
             sys.argv[1:],
             "csf:n:t:b:m:",
-            ["verbose=", "save=", "ip=", "rp=", "lp=", "sync=", "dyna="],
+            ["verbose=", "save=", "ip=", "rp=", "lp=", "sync=", "dyna=", "localIP="],
         )
         opts = dict(_opts)
         opts.setdefault("-f", "1")
@@ -234,6 +243,8 @@ if __name__ == "__main__":
         opts.setdefault("--verbose", "True")
         opts.setdefault("--dyna", "True")
         opts.setdefault("--save", "result.csv")
+        opts.setdefault("--localIP", "0.0.0.0")
+
 
     except getopt.GetoptError:
         print(
@@ -284,11 +295,13 @@ if __name__ == "__main__":
         opts.setdefault("--rp", "20002")
 
         server = Server(
+            local_ip=opts["--localIP"],
             remote_ip=opts["--ip"],
             local_port=int(opts["--lp"]),
             to_port=int(opts["--rp"]),
         )
         q = Queue()
+        server.setRemoteIP()
 
         listen_process = Process(
             target=server.listen, args=(int(opts["-b"]), eval(opts["--verbose"]), q)
